@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'spisim'",
+            "name": "Debug executable 'spisim_rs'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=spisim",
-                    "--package=spisim"
+                    "--bin=spisim_rs",
+                    "--package=spisim_rs"
                 ],
                 "filter": {
-                    "name": "spisim",
+                    "name": "spisim_rs",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'spisim'",
+            "name": "Debug unit tests in executable 'spisim_rs'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=spisim",
-                    "--package=spisim"
+                    "--bin=spisim_rs",
+                    "--package=spisim_rs"
                 ],
                 "filter": {
-                    "name": "spisim",
+                    "name": "spisim_rs",
                     "kind": "bin"
                 }
             },
