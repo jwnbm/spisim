@@ -1,11 +1,46 @@
 use std::error::Error;
 use std::fmt::Debug;
 
-pub mod element;
+pub mod inputsource;
+use inputsource::InputSource;
+
+#[derive(Debug)]
+pub enum Element
+{
+    Capacitor {
+        name: String,
+        node1: String,
+        node2: String,
+        model: Option<String>,
+        capacitance: f64,
+        initial: Option<f64>,
+    },
+    Inductor {
+        name: String,
+        node1: String,
+        node2: String,
+        model: Option<String>,
+        inductance: f64,
+        initial: Option<f64>,
+    },
+    Resistor {
+        name: String,
+        node1: String,
+        node2: String,
+        model: Option<String>,
+        resistance: f64,
+    },
+    VoltageSource {
+        name: String,
+        node1: String,
+        node2: String,
+        vtype: Box<dyn InputSource>,
+    }
+}
+
 pub mod resistor;
 pub mod capacitor;
 pub mod inductor;
-pub mod inputsource;
 pub mod voltagesource;
 
 /// SI接頭辞を考慮して文字列を数値に変換して返す。
