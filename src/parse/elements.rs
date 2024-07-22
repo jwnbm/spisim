@@ -34,14 +34,21 @@ pub enum Element
         name: String,
         node1: String,
         node2: String,
-        vtype: Box<dyn InputSource>,
+        vtype: InputSource,
     }
 }
 
 pub mod resistor;
+use resistor::parse_resistor;
+
 pub mod capacitor;
+use capacitor::parse_capacitor;
+
 pub mod inductor;
+use inductor::parse_inductor;
+
 pub mod voltagesource;
+use voltagesource::parse_voltage_source;
 
 /// SI接頭辞を考慮して文字列を数値に変換して返す。
 /// ## Example
@@ -60,7 +67,7 @@ pub fn parse_value(value: &str) -> Result<f64, Box<dyn Error>> {
 
     let last_char: Option<char> = value.chars().last();
     let multiplier: f64 = match last_char {
-        Some('k') => 1e3,
+        Some('k') | Some('K') => 1e3,
         Some('M') => 1e6,
         Some('G') => 1e9,
         Some('m') => 1e-3,
@@ -114,6 +121,18 @@ pub fn parse_named_value(value: &str, name: &str, units: &[&str]) -> Result<f64,
         value
     };
     parse_unitvalue(val, units)
+}
+
+pub fn parse_element(line: &str) -> Result<Element, Box<dyn Error>>
+{
+    match line.chars().next() {
+        Some('R') => parse_resistor(&line),
+        Some('C') => parse_capacitor(&line),
+        Some('L') => parse_inductor(&line),
+        Some('V') => parse_voltage_source(&line),
+        // 他の要素も必要に応じて追加
+        Some(_) | None => return Err(format!("Unknown element type: {}", line).into()),
+    }
 }
 
 #[cfg(test)]

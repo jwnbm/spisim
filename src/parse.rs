@@ -6,10 +6,7 @@ use std::path::Path;
 mod elements;
 use elements::{
     Element,
-    resistor::parse_resistor,
-    capacitor::parse_capacitor,
-    inductor::parse_inductor,
-    voltagesource::parse_voltage_source,
+    parse_element
  };
 
 pub fn parse_netlist(filename: &str) -> Result<Vec<Element>, Box<dyn Error>> {
@@ -25,14 +22,7 @@ pub fn parse_netlist(filename: &str) -> Result<Vec<Element>, Box<dyn Error>> {
             continue; // コメント行や空行をスキップ
         }
 
-        let element: Element = match line.chars().next() {
-            Some('R') => parse_resistor(&line)?,
-            Some('C') => parse_capacitor(&line)?,
-            Some('L') => parse_inductor(&line)?,
-            Some('V') => parse_voltage_source(&line)?,
-            // 他の要素も必要に応じて追加
-            Some(_) | None => return Err(format!("Unknown element type: {}", line).into()),
-        };
+        let element: Element = parse_element(&line)?;
         elements.push(element);
     }
 

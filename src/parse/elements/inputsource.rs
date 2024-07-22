@@ -2,72 +2,53 @@ use std::error::Error;
 
 use super::*;
 
-pub trait InputSource: Debug {}
-
 #[derive(Debug)]
-struct DC {
-    voltage: f64,
+pub enum InputSource {
+    DC {
+        voltage: f64,
+    },
+    AC {
+        mag: f64,
+        phase: Option<f64>,
+    },
+    Pulse {
+        v1: f64,
+        v2: f64,
+        tdelay: f64,
+        trise: f64,
+        tfall: f64,
+        width: f64,
+        period: f64,
+    },
+    Sin {
+        voffset: f64,
+        vpeak: f64,
+        freq: f64,
+        tdelay: Option<f64>,
+        damp_factor: Option<f64>,
+        phase: Option<f64>,
+    },
+    Exp {
+        v1: f64,
+        v2: f64,
+        trise_delay: f64,
+        tau_rise: f64,
+        tfall_delay: f64,
+        tau_fall: f64,
+    },
+    PWL {
+        points: Vec<(f64, f64)>,
+    },
+    SFFM {
+        voffset: f64,
+        vpeak: f64,
+        fcarrier: f64,
+        mod_index: f64,
+        fsignal: f64,
+    }
 }
-impl InputSource for DC {}
 
-#[derive(Debug)]
-struct AC {
-    mag: f64,
-    phase: Option<f64>,
-}
-impl InputSource for AC {}
-
-#[derive(Debug)]
-struct Pulse {
-    v1: f64,
-    v2: f64,
-    tdelay: f64,
-    trise: f64,
-    tfall: f64,
-    width: f64,
-    period: f64,
-}
-impl InputSource for Pulse {}
-
-#[derive(Debug)]
-struct Sin {
-    voffset: f64,
-    vpeak: f64,
-    freq: f64,
-    tdelay: Option<f64>,
-    damp_factor: Option<f64>,
-    phase: Option<f64>,
-}
-impl InputSource for Sin {}
-
-#[derive(Debug)]
-struct Exp {
-    v1: f64,
-    v2: f64,
-    trise_delay: f64,
-    tau_rise: f64,
-    tfall_delay: f64,
-    tau_fall: f64,
-}
-impl InputSource for Exp {}
-
-#[derive(Debug)]
-struct PWL {
-    points: Vec<(f64, f64)>,
-}
-impl InputSource for PWL {}
-
-#[derive(Debug)]
-struct SFFM {
-    voffset: f64,
-    vpeak: f64,
-    fcarrier: f64,
-    mod_index: f64,
-    fsignal: f64,
-}
-impl InputSource for SFFM {}
-
-pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn InputSource>, Box<dyn Error>> {
+pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<InputSource, Box<dyn Error>> {
 
     fn extract_parentheses_content(text: &str) -> Option<&str> {
         if let Some(start) = text.find('(') {
@@ -90,7 +71,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
     if token.starts_with("DC") {
         let tokens: Vec<&str> = token.split_whitespace().collect();
         let voltage: f64 = parse_param(&tokens,1, &units, token)?;
-        Ok(Box::new(DC { voltage }))
+        Ok(InputSource::DC { voltage })
     }
     else if token.starts_with("AC") {
         let tokens: Vec<&str> = token.split_whitespace().collect();
@@ -99,7 +80,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
             Ok(value) => Some(value),
             _ => None,
         };
-        Ok(Box::new(AC { mag, phase }))
+        Ok(InputSource::AC { mag, phase })
     }
     else if token.starts_with("PULSE") {
         let params: Vec<&str> = match extract_parentheses_content(token) {
@@ -113,7 +94,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
         let tfall: f64 = parse_param(&params, 4, &["s"], token)?;
         let width: f64 = parse_param(&params, 5, &["s"], token)?;
         let period: f64 = parse_param(&params, 6, &["s"], token)?;
-        Ok(Box::new(Pulse { v1, v2, tdelay, trise, tfall, width, period }))
+        Ok(InputSource::Pulse { v1, v2, tdelay, trise, tfall, width, period })
     }
     else if token.starts_with("SIN") {
         let params: Vec<&str> = match extract_parentheses_content(token) {
@@ -135,7 +116,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
             Ok(v) => Some(v),
             _ => None,
         };
-        Ok(Box::new(Sin{ voffset, vpeak, freq, tdelay, damp_factor, phase }))
+        Ok(InputSource::Sin{ voffset, vpeak, freq, tdelay, damp_factor, phase })
     }
     else if token.starts_with("EXP") {
         let params: Vec<&str> = match extract_parentheses_content(token) {
@@ -148,7 +129,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
         let tau_rise: f64 = parse_param(&params, 3, &["s"], token)?;
         let tfall_delay: f64 = parse_param(&params, 4, &["s"], token)?;
         let tau_fall: f64 = parse_param(&params, 5, &["s"], token)?;
-        Ok(Box::new(Exp{ v1, v2, trise_delay, tau_rise, tfall_delay, tau_fall }))
+        Ok(InputSource::Exp{ v1, v2, trise_delay, tau_rise, tfall_delay, tau_fall })
     }
     else if token.starts_with("PWL") {
         let params: Vec<&str> = match extract_parentheses_content(token) {
@@ -163,7 +144,7 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
             index += 1;
         }
         let points: Vec<(f64, f64)> = points.chunks(2).map(|chunk| (chunk[0], chunk[1])).collect();
-        Ok(Box::new(PWL{ points }))
+        Ok(InputSource::PWL{ points })
     }
     else if token.starts_with("SFFM") {
         let params: Vec<&str> = match extract_parentheses_content(token) {
@@ -175,11 +156,11 @@ pub fn parse_input_source(token: &str, is_voltage: bool) -> Result<Box<dyn Input
         let fcarrier: f64 = parse_param(&params, 2, &["s"], token)?;
         let mod_index: f64 = parse_param(&params, 3, &[], token)?;
         let fsignal: f64 = parse_param(&params, 4, &[], token)?;
-        Ok(Box::new(SFFM{ voffset, vpeak, fcarrier, mod_index, fsignal }))
+        Ok(InputSource::SFFM{ voffset, vpeak, fcarrier, mod_index, fsignal })
     }
     else {
         let tokens: Vec<&str> = token.split_whitespace().collect();
         let voltage: f64 = parse_param(&tokens,0, &units, token)?;
-        Ok(Box::new(DC { voltage }))
+        Ok(InputSource::DC { voltage })
     }
 }
