@@ -38,3 +38,27 @@ pub fn parse_inductor(line: &str) -> Result<Element, Box<dyn Error>>
         initial,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_inductor_pass_normal() -> Result<(), Box<dyn Error>> {
+        let actual: Element = parse_inductor("L1 N1 N2 20nH")?;
+        match actual {
+            Element::Inductor { name, node1, node2, model, inductance, initial } => {
+                assert_eq!(name, "L1");
+                assert_eq!(node1, "N1");
+                assert_eq!(node2, "N2");
+                assert!(model.is_none());
+                assert_eq!(inductance, 20e-9);
+                assert!(initial.is_none());
+            }
+            _ => {
+                panic!();
+            }
+        }
+        Ok(())
+    }
+}

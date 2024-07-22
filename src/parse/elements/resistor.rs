@@ -32,3 +32,26 @@ pub fn parse_resistor(line: &str) -> Result<Element, Box<dyn Error>>
         resistance,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_resistor_pass_normal() -> Result<(), Box<dyn Error>> {
+        let actual: Element = parse_resistor("R1 N1 N2 1K")?;
+        match actual {
+            Element::Resistor { name, node1, node2, model, resistance } => {
+                assert_eq!(name, "R1");
+                assert_eq!(node1, "N1");
+                assert_eq!(node2, "N2");
+                assert!(model.is_none());
+                assert_eq!(resistance, 1e3);
+            }
+            _ => {
+                panic!();
+            }
+        }
+        Ok(())
+    }
+}
