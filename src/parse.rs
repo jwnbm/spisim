@@ -4,8 +4,9 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 mod parse_util;
-mod elements;
-mod commands;
+
+pub mod elements;
+pub mod commands;
 
  #[derive(Debug)]
 pub struct Netlist {
